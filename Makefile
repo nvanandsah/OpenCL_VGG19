@@ -20,7 +20,8 @@ LFLAGS = -L${OCL_LIB}
 LIBS = -lOpenCL
 
 # source files
-SRCS = main.cpp Utils/utils.cpp 
+# SRCS = main.cpp Utils/utils.cpp 
+SRCS = main.cpp  
 
 # object files 
 OBJS = $(SRCS:.c=.o)
