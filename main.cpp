@@ -178,7 +178,7 @@ class Dense
 	public:
 		int inChannels;
 		int outChannels;
-		string *layerName;
+		string layerName;
 		string *weightFilePath;
 		FILE *filePtr;
 		double *weights;
@@ -187,35 +187,38 @@ class Dense
 		Dense(string weightFilePath, int inc, int outc)
 		{
 			this->weightFilePath = new string(weightFilePath);
-			this->layerName = NULL;
+			this->layerName = "Dense";
 
 			bool status = readFile();
 			if(status == 0)
 				throw std::invalid_argument("read failed, please make sure you are provding correct file path...");
 			else
-				cout<<"Pointer to file "<<*(this->weightFilePath)<<" opened successfully..."<<endl;
+				cout<<"\nPointer to file "<<*(this->weightFilePath)<<" opened successfully..."<<endl;
 			
 			//parseLayerName();   // Get layer name
 			this->inChannels = inc;
 			this->outChannels = outc;
-			//this->layerName = *weightFilePath;
+			this->layerName = "Dense";
 			//parseKernelDimensions();    // Get kernel dimensions
 			
 
 			allocateSpace();    // Allocate space to hold weights
+			std::cout<<"sacacdavav\n";
 			parseWeights();     // Parse weights value into array
-			parseBiases();      // Parse biases value into array
+			
+			//parseBiases();      // Parse biases value into array
+			
 		}
 		~Dense()
 		{
-			delete this->layerName;
+			//delete this->layerName;
 			delete this->weightFilePath;
 			deallocateSpace();
 		}
 
 		void layerSummary()
 		{
-			cout<<"Layer Name : "<<*(this->layerName)<<endl;
+			cout<<"Layer Name : "<<(this->layerName)<<endl;
 			cout<<"in channel : "<<this->inChannels<<endl;
 			cout<<"out channel : "<<this->outChannels<<endl;
 		}
@@ -225,7 +228,7 @@ class Dense
 		{	
 			/* Allocate Space for weights */
 			// number of channels x width x height x depth
-			std::cout<<(this->inChannels)<<" "<<(this->outChannels)<<"\n";
+			//std::cout<<(this->inChannels)<<" "<<(this->outChannels)<<"\n";
 			this->weights = new double[(this->inChannels)*(this->outChannels)];
 			
 			/* Allocate space for biases */
@@ -253,7 +256,7 @@ class Dense
 		{
 			char tmp[100];
 			fscanf(this->filePtr, "%s\n", tmp);
-			this->layerName = new string(tmp);
+			//this->layerName = new string(tmp);
 		}
 
 		void parseKernelDimensions()
@@ -265,20 +268,34 @@ class Dense
 		{
 			int inp = (this->inChannels);
 			int out = (this->outChannels);
-			for(int i=0; i<inp; i++)
-			{
-				for(int o=0; o<out; o++)
-				{	
-					fscanf(this->filePtr, "%lf ", &weights[(i*inp)+o]);
+			std::cout<<inp<<" "<<out<<"\n";
+			float s = 0;
+				try{
+					for(int i=0; i<inp; i++)
+					{
+						for(int o=0; o<out; o++)
+						{	
+							if(!(out==4096 && inp==4096))
+								std::cout<<i<<" "<<o<<"\n";
+							fscanf(this->filePtr, "%lf ", &weights[(i*inp)+o]);
+							//s = (i*inp)+o;
+						}
+					}
+					//std::cout<<s;
 				}
-			}
-			fscanf(this->filePtr, "\n");
+				catch(...){
+					std::cout<<"dafad";
+				}
+				std::cout<<"asdfg\n";
+			
+			//	fscanf(this->filePtr, "\n");
 		}
 
 		void parseBiases()
 		{
-			for(int channel=0; channel<(this->outChannels); channel++)
+			/*for(int channel=0; channel<(this->outChannels); channel++)
 				fscanf(this->filePtr,"%lf ", &biases[channel]);
+		*/
 		}
 };
 int main() 
@@ -306,10 +323,8 @@ int main()
 			1 -- MaxPool
 			2 -- Dense
 	*/
-	int arr[] = 	  {  0 ,0 ,1 ,0  ,0  ,1  ,0  ,0  ,0  ,0  ,1  ,0  ,0  ,0  ,0  ,1  ,0  ,0  ,0  ,0  ,1, 2,   2,2};
-	//int arr[] = 	  {  0 ,0 ,1 ,0  ,0  ,1  ,0  ,0  ,0  ,0  ,1  ,0  ,0  ,0  ,0  ,1 , 2,   2,2};
-	//int arr[] = 	  {  0 ,0 ,1 ,0  ,0  ,1  ,0  ,0  ,0  ,0  ,1  ,0  ,0  ,0  ,0  ,1 };
-	int chanelarr[] = {3,64,64,64,128,128,128,256,256,256,256,256,512,512,512,512,512,512,512,512,512,4096,4096,10};
+	int arr[] = 	  {0,0 ,1 ,0 ,0  ,1  ,0  ,0  ,0  ,0  ,1  ,0  ,0  ,0  ,0  ,1  ,0  ,0  ,0  ,0  ,1  ,  2,   2, 2};
+	int chanelarr[] = {3,64,64,64,128,128,128,256,256,256,256,256,512,512,512,512,512,512,512,512,512, 512,4096,4096,10};
 	//string fnarr[] = {"1Conv2d","2Conv2d","4Conv2d","5Conv2d","7Conv2d","8Conv2d","9Conv2d","","23Dense"};
 	hInputImage = readImgtxt(inputImagePath);
 	input_buffer = hInputImage;
@@ -322,7 +337,7 @@ int main()
 			///// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-   Convolution Layer -=--=-=-=-=-=-=-=-=-=-=-=-=--=--=-==-=- /////
 			//string fn = "Conv2D"+ std::to_string(i) + ".txt"; 
 			string fn = "Weights/"+std::to_string(i+1)+"Conv2d.txt";
-			string weightFilePath(fn);
+			string weightFilePath = fn;
 			Conv2D layer1(weightFilePath);
 			layer1.layerSummary();
 	
@@ -344,7 +359,7 @@ int main()
 				cl::Buffer kernelSizeBuffer = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(int));
 				cl::Buffer imgRowsBuffer = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(int));
 				cl::Buffer imgColsBuffer = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(int));
-
+				
 				queue.enqueueWriteBuffer(inputBuffer, CL_TRUE, 0, in_channels*imgRows*imgCols*sizeof(float), input_buffer);
 				queue.enqueueWriteBuffer(filterBuffer, CL_TRUE, 0, in_channels*out_channels*kernel_size*kernel_size*sizeof(float), layer1.weights);
 				queue.enqueueWriteBuffer(biasBuffer, CL_TRUE, 0, out_channels*sizeof(float), layer1.biases);
@@ -355,7 +370,7 @@ int main()
 				queue.enqueueWriteBuffer(imgRowsBuffer, CL_TRUE, 0, sizeof(int), &imgRows);
 				queue.enqueueWriteBuffer(imgColsBuffer, CL_TRUE, 0, sizeof(int), &imgCols);
 
-				std::ifstream sourceFile("Kernels/conv.cl");
+				std::ifstream sourceFile("Kernels/Conv.cl");
 				std::string sourceCode(
 				std::istreambuf_iterator<char>(sourceFile),(std::istreambuf_iterator<char>()));
 				cl::Program::Sources source(1, std::make_pair(sourceCode.c_str(),sourceCode.length() + 1));
@@ -383,7 +398,7 @@ int main()
 				queue.enqueueNDRangeKernel(kernel, cl::NullRange, global, local,NULL,&event);
 				queue.finish();
 				// Read data back
-				queue.enqueueReadBuffer(outputBuffer, CL_TRUE, 0, out_channels*imgRows*imgCols*sizeof(float), output_buffer);
+				//queue.enqueueReadBuffer(outputBuffer, CL_TRUE, 0, out_channels*imgRows*imgCols*sizeof(float), output_buffer);
 				cl_ulong time_start;
 				cl_ulong time_end;
 				Curr_channel = out_channels;
@@ -403,11 +418,12 @@ int main()
 			catch(...){
 				cout<<"Error";
 			}
-			// --------------------------------------------------- Layer 1 End
 
-			for (int p = 0;p<(out_channels*imgRows*imgCols);p++){ 
+			// --------------------------------------------------- Layer 1 End
+			cout<<"Complete \n";
+			//for (int p = 0;p<(out_channels*imgRows*imgCols);p++){ 
 				//	input_buffer[p] = output_buffer[p]; 
-				}
+			//	}
 			
 		}
 		if(arr[i]==1){
@@ -440,7 +456,7 @@ int main()
 				queue.enqueueWriteBuffer(inDimBuffer, CL_TRUE, 0, sizeof(int), &imgRows);
 				queue.enqueueWriteBuffer(outDimBuffer, CL_TRUE, 0, sizeof(int), &outImgRows);
 
-				std::ifstream sourceFile("cl_kernels/max_pool2d.cl");
+				std::ifstream sourceFile("Kernels/Max_Pool2D.cl");
 				std::string sourceCode(
 				std::istreambuf_iterator<char>(sourceFile),
 				(std::istreambuf_iterator<char>()));
@@ -492,10 +508,13 @@ int main()
 		}
 		else if(arr[i]==2){
 			//// =-=-=-=-=-=-=-=-=------=--=-=-=-= Dense -=-=-=-=-=-=-=-=-==--=-=
-			string fn = "Weights/"+std::to_string(i+7)+"Dense.txt";
-			string weightFilePath(fn);
+			std::cout<<"Weights/"+std::to_string(i+2)+"Dense.txt\n";
+			string fn = "Weights/"+std::to_string(i+2)+"Dense.txt";
+			string weightFilePath = fn ;
+			std::cout<<weightFilePath<<" "<<chanelarr[i]<<" "<< chanelarr[i+1];
 			Dense layer1(weightFilePath,chanelarr[i], chanelarr[i+1]);
 			layer1.layerSummary();
+			
 			int in_features, out_features;
 			in_features = layer1.inChannels;
 			out_features = layer1.outChannels;
@@ -507,27 +526,24 @@ int main()
 				cl::Buffer biasesBuffer = cl::Buffer(context, CL_MEM_READ_ONLY, out_features*sizeof(float));
 				cl::Buffer inFeaturesBuffer = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(int));
 				cl::Buffer outFeaturesBuffer = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(int));
-
+				
 				queue.enqueueWriteBuffer(inputBuffer, CL_TRUE, 0, in_features*sizeof(float), input_buffer);
 				queue.enqueueWriteBuffer(outputBuffer, CL_TRUE, 0, out_features*sizeof(float), output_buffer);
 				queue.enqueueWriteBuffer(weightsBuffer, CL_TRUE, 0, in_features*out_features*sizeof(float),layer1.weights);
 				queue.enqueueWriteBuffer(biasesBuffer, CL_TRUE, 0, out_features*sizeof(float), layer1.biases);
 				queue.enqueueWriteBuffer(inFeaturesBuffer, CL_TRUE, 0, sizeof(int), &in_features);
 				queue.enqueueWriteBuffer(outFeaturesBuffer, CL_TRUE, 0, sizeof(int), &out_features);
-
-				std::ifstream sourceFile("cl_kernels/relu_linear.cl");
+				
+				std::ifstream sourceFile("Kernels/Dense.cl");
 				std::string sourceCode(
-				std::istreambuf_iterator<char>(sourceFile),
-				(std::istreambuf_iterator<char>()));
-				cl::Program::Sources source(1,
-				std::make_pair(sourceCode.c_str(),
-				sourceCode.length() + 1));
-
+				std::istreambuf_iterator<char>(sourceFile),	(std::istreambuf_iterator<char>()));
+				cl::Program::Sources source(1, std::make_pair(sourceCode.c_str(), sourceCode.length() + 1));
+				
 				cl::Program program = cl::Program(context, source);
 
 				program.build(devices);
 
-				cl::Kernel kernel(program, "relu_linear");
+				cl::Kernel kernel(program, "dense");
 
 				kernel.setArg(0, inFeaturesBuffer);
 				kernel.setArg(1, outFeaturesBuffer);
@@ -535,14 +551,14 @@ int main()
 				kernel.setArg(3, weightsBuffer);
 				kernel.setArg(4, biasesBuffer);
 				kernel.setArg(5, outputBuffer);
-
+				//std::cout<<"d22\n";
 				cl::NDRange global(out_features, 1);
 				cl::NDRange local(1, 1);
 				cl::Event event;
 				queue.enqueueNDRangeKernel(kernel, cl::NullRange, global, local,NULL,&event);
 				queue.finish();
-
-				queue.enqueueReadBuffer(outputBuffer, CL_TRUE, 0, out_features*sizeof(float), output_buffer);
+				//std::cout<<"dsfebv\n";
+				//queue.enqueueReadBuffer(outputBuffer, CL_TRUE, 0, out_features*sizeof(float), output_buffer);
 				cl_ulong time_start;
 				cl_ulong time_end;
 					
