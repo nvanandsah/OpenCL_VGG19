@@ -7,7 +7,7 @@ __kernel void dense(__global int* in_features,
 {
 
 //printf("%d ",44);
-/*
+
 	int row = get_global_id(0);
 	float sum = 0.0;
 	float val;
@@ -22,5 +22,5 @@ __kernel void dense(__global int* in_features,
 	sum += *(bias + row);
 
 	*(out + row) = sum;
-*/
+
 }

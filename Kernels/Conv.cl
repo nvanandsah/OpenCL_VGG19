@@ -46,13 +46,14 @@ __kernel void convolution(
 				}
 			}
 		}
-
+		
 		*(out_img + row**rows + column + out_channel*(*rows * *cols)) = sum + *(bias + out_channel);
 		// ReLU Implementation
-		if ( *(out_img + row**rows + column + out_channel*(*rows * *cols)) < 0.0)
-		{
-			*(out_img + row**rows + column + out_channel*(*rows * *cols)) = 0.0;
-		}
+		
+		//if ( *(out_img + row**rows + column + out_channel*(*rows * *cols)) < 0.0)
+		//{
+		//	*(out_img + row**rows + column + out_channel*(*rows * *cols)) = 0.0;
+		//}
 	}
 
 }
